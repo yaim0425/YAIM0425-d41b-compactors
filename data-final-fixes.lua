@@ -25,21 +25,21 @@ function This_MOD.start()
     --- Obtener los elementos
     This_MOD.get_elements()
 
-    -- --- Modificar los elementos
-    -- for _, spaces in pairs(This_MOD.to_be_processed) do
-    --     for _, space in pairs(spaces) do
-    --         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    --- Modificar los elementos
+    for _, spaces in pairs(This_MOD.to_be_processed) do
+        for _, space in pairs(spaces) do
+            --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    --         -- --- Crear los elementos
-    --         -- This_MOD.create_subgroup(space)
-    --         -- This_MOD.create_item(space)
-    --         -- This_MOD.create_entity(space)
-    --         -- This_MOD.create_recipe(space)
-    --         -- This_MOD.create_tech(space)
+            -- --- Crear los elementos
+            This_MOD.create_subgroup(space)
+            This_MOD.create_item(space)
+            -- This_MOD.create_entity(space)
+            -- This_MOD.create_recipe(space)
+            -- This_MOD.create_tech(space)
 
-    --         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-    --     end
-    -- end
+            --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        end
+    end
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 end
@@ -73,10 +73,10 @@ function This_MOD.reference_values()
 
     --- Imagenes para los iconos
     This_MOD.icon_graphics = {
-        arrow_u = This_MOD.path_graphics .. "icons-u.png",
-        arrow_d = This_MOD.path_graphics .. "icons-d.png",
-        base    = This_MOD.path_graphics .. "icons-base.png",
-        mask    = This_MOD.path_graphics .. "icons-mask.png"
+        arrow_u = This_MOD.path_graphics .. "icon-u.png",
+        arrow_d = This_MOD.path_graphics .. "icon-d.png",
+        base    = This_MOD.path_graphics .. "icon-base.png",
+        mask    = This_MOD.path_graphics .. "icon-mask.png"
     }
 
     --- Imagenes para las entidades
@@ -125,6 +125,7 @@ function This_MOD.reference_values()
     This_MOD.new_subgroup = This_MOD.prefix .. This_MOD.name
     This_MOD.old_subgroup = GMOD.items["splitter"].subgroup
     This_MOD.item_subgroup = "item-" .. This_MOD.category_do
+    This_MOD.item_tech = "transport-belt"
     This_MOD.splitter = "splitter"
 
     --- Valores a evitar
@@ -211,6 +212,10 @@ function This_MOD.get_elements()
             GMOD.get_id_and_name(entity.name) or
             { ids = "-", name = entity.name }
 
+        --- Identificar el tier
+        local Tier = string.gsub(That_MOD.name, This_MOD.splitter, "")
+        if not This_MOD.colors[Tier] then return end
+
         --- Validar si ya fue procesado
         local Name = string.gsub(That_MOD.name, This_MOD.splitter, This_MOD.entity_name)
         Name =
@@ -235,9 +240,20 @@ function This_MOD.get_elements()
         Space.entity = entity
         Space.name = Name
 
+        Space.belt = string.gsub(That_MOD.name, This_MOD.splitter, This_MOD.item_tech)
+        Space.tech = GMOD.get_technology(GMOD.recipes[Space.belt])
+
         Space.recipe = GMOD.recipes[Space.item.name]
-        Space.tech = GMOD.get_technology(Space.recipe)
         Space.recipe = Space.recipe and Space.recipe[1] or nil
+
+        Space.color = This_MOD.colors[Tier]
+
+        Space.localised_name = {
+            "",
+            { "entity-name." .. This_MOD.prefix .. This_MOD.entity_name },
+            " - ",
+            { "entity-name." .. Space.belt }
+        }
 
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -331,18 +347,20 @@ function This_MOD.create_item(space)
     Item.name = space.name
 
     --- Apodo y descripción
-    Item.localised_name = GMOD.copy(space.entity.localised_name)
-    Item.localised_description = GMOD.copy(This_MOD.lane_splitter.localised_description)
+    Item.localised_name = space.localised_name
+    Item.localised_description = { "", { "entity-description." .. This_MOD.prefix .. This_MOD.entity_name } }
 
     --- Entidad a crear
     Item.place_result = space.name
 
     --- Agregar indicador del MOD
-    table.insert(Item.icons, This_MOD.indicator)
+    Item.icons = {
+        { icon = This_MOD.icon_graphics.base },
+        { icon = This_MOD.icon_graphics.mask, tint = space.color },
+    }
 
-    --- Actualizar Order
-    local Order = tonumber(Item.order) + 1
-    Item.order = GMOD.pad_left_zeros(#Item.order, Order)
+    --- Actualizar subgrupo
+    Item.subgroup = This_MOD.new_subgroup
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -671,5 +689,3 @@ end
 This_MOD.start()
 
 ---------------------------------------------------------------------------
-GMOD.var_dump(This_MOD)
-ERROR()
