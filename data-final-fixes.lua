@@ -411,7 +411,7 @@ function This_MOD.create_entity(space)
 
     --- Apodo y descripción
     Entity.localised_name = GMOD.copy(space.entity.localised_name)
-    Entity.localised_description = GMOD.copy(This_MOD.lane_splitter.localised_description)
+    Entity.localised_description = { "", { "entity-description." .. This_MOD.prefix .. This_MOD.entity_name } }
 
     --- Cambiar el tipo
     Entity.type = This_MOD.lane_splitter.type
@@ -420,8 +420,10 @@ function This_MOD.create_entity(space)
     Entity.factoriopedia_simulation = nil
 
     --- Cambiar icono
-    Entity.icons = GMOD.copy(space.item.icons)
-    table.insert(Entity.icons, This_MOD.indicator)
+    Entity.icons = {
+        { icon = This_MOD.icon_graphics.base },
+        { icon = This_MOD.icon_graphics.mask, tint = space.color },
+    }
 
     --- Copiar algunos valores
     for _, propiety in pairs({
@@ -527,7 +529,7 @@ function This_MOD.create_recipe(space)
 
     --- Apodo y descripción
     Recipe.localised_name = GMOD.copy(space.entity.localised_name)
-    Recipe.localised_description = GMOD.copy(This_MOD.lane_splitter.localised_description)
+    Recipe.localised_description = { "", { "entity-description." .. This_MOD.prefix .. This_MOD.entity_name } }
 
     --- Elimnar propiedades inecesarias
     Recipe.main_product = nil
@@ -537,8 +539,10 @@ function This_MOD.create_recipe(space)
     Recipe.maximum_productivity = 1000000
 
     --- Cambiar icono
-    Recipe.icons = GMOD.copy(space.item.icons)
-    table.insert(Recipe.icons, This_MOD.indicator)
+    Recipe.icons = {
+        { icon = This_MOD.icon_graphics.base },
+        { icon = This_MOD.icon_graphics.mask, tint = space.color },
+    }
 
     --- Habilitar la receta
     Recipe.enabled = space.tech == nil
@@ -637,11 +641,13 @@ function This_MOD.create_tech(space)
 
     --- Apodo y descripción
     Tech.localised_name = GMOD.copy(space.entity.localised_name)
-    Tech.localised_description = GMOD.copy(This_MOD.lane_splitter.localised_description)
+    Tech.localised_description = { "", { "entity-description." .. This_MOD.prefix .. This_MOD.entity_name } }
 
     --- Cambiar icono
-    Tech.icons = GMOD.copy(space.item.icons)
-    table.insert(Tech.icons, This_MOD.indicator_tech)
+    Tech.icons = {
+        { icon = This_MOD.tech_graphics.base },
+        { icon = This_MOD.tech_graphics.mask, tint = space.color },
+    }
 
     --- Tech previas
     Tech.prerequisites = { space.tech.name }
