@@ -79,6 +79,12 @@ function This_MOD.reference_values()
         mask    = This_MOD.path_graphics .. "icon-mask.png"
     }
 
+    --- Imagenes para las tech
+    This_MOD.tech_graphics = {
+        base = This_MOD.path_graphics .. "tech-base.png",
+        mask = This_MOD.path_graphics .. "tech-mask.png"
+    }
+
     --- Imagenes para las entidades
     This_MOD.entity_graphics = {
         base    = This_MOD.path_graphics .. "entities-base.png",
