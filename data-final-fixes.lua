@@ -22,8 +22,8 @@ function This_MOD.start()
     --- Valores de la referencia
     This_MOD.reference_values()
 
-    -- --- Obtener los elementos
-    -- This_MOD.get_elements()
+    --- Obtener los elementos
+    This_MOD.get_elements()
 
     -- --- Modificar los elementos
     -- for _, spaces in pairs(This_MOD.to_be_processed) do
@@ -112,8 +112,10 @@ function This_MOD.reference_values()
     This_MOD.amount = This_MOD.setting["amount"] or 10
 
     --- Nombre de la maquina
-    This_MOD.new_entity_name = "compactor"
-    This_MOD.old_entity_name = "electric-furnace"
+    This_MOD.entity_name = "compactor"
+
+    --- Entidad de referencia
+    This_MOD.furnace = GMOD.entities["electric-furnace"]
 
     --- Categorias de fabricación
     This_MOD.category_do = "compressed"
@@ -201,8 +203,7 @@ function This_MOD.get_elements()
         if not item then return end
         if GMOD.is_hidde(item) then return end
 
-        --- Validar el tipo
-        if entity.type ~= "splitter" then return end
+        --- Validar la entidad
         if GMOD.is_hidde(entity) then return end
 
         --- Validar si ya fue procesado
@@ -210,10 +211,12 @@ function This_MOD.get_elements()
             GMOD.get_id_and_name(entity.name) or
             { ids = "-", name = entity.name }
 
-        local Name =
+        --- Validar si ya fue procesado
+        local Name = string.gsub(That_MOD.name, This_MOD.splitter, This_MOD.entity_name)
+        Name =
             GMOD.name .. That_MOD.ids ..
             This_MOD.id .. "-" ..
-            That_MOD.name
+            Name
 
         if GMOD.entities[Name] ~= nil then return end
 
@@ -668,3 +671,5 @@ end
 This_MOD.start()
 
 ---------------------------------------------------------------------------
+GMOD.var_dump(This_MOD)
+ERROR()
