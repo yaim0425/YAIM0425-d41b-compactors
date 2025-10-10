@@ -33,7 +33,7 @@ function This_MOD.start()
             -- --- Crear los elementos
             This_MOD.create_subgroup(space)
             This_MOD.create_item(space)
-            -- This_MOD.create_entity(space)
+            This_MOD.create_entity(space)
             -- This_MOD.create_recipe(space)
             -- This_MOD.create_tech(space)
 
@@ -400,7 +400,7 @@ function This_MOD.create_entity(space)
     --- Duplicar el elemento
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    local Entity = GMOD.copy(space.entity)
+    local Entity = GMOD.copy(This_MOD.furnace)
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -416,11 +416,11 @@ function This_MOD.create_entity(space)
     Entity.name = space.name
 
     --- Apodo y descripción
-    Entity.localised_name = GMOD.copy(space.entity.localised_name)
+    Entity.localised_name = space.localised_name
     Entity.localised_description = { "", { "entity-description." .. This_MOD.prefix .. This_MOD.entity_name } }
 
-    --- Cambiar el tipo
-    Entity.type = This_MOD.lane_splitter.type
+    --- Velocidad de fabricación
+    Entity.crafting_speed = space.entity.speed
 
     --- Elimnar propiedades inecesarias
     Entity.factoriopedia_simulation = nil
@@ -430,23 +430,6 @@ function This_MOD.create_entity(space)
         { icon = This_MOD.icon_graphics.base },
         { icon = This_MOD.icon_graphics.mask, tint = space.color },
     }
-
-    --- Copiar algunos valores
-    for _, propiety in pairs({
-        "collision_box",
-        "selection_box",
-        "fast_replaceable_group"
-    }) do
-        Entity[propiety] = This_MOD.lane_splitter[propiety]
-    end
-
-    for _, propiety in pairs({ "structure", "structure_patch" }) do
-        for key, newTable in pairs(Entity[propiety] or {}) do
-            local oldTable = This_MOD.lane_splitter[propiety][key] or {}
-            newTable.shift = oldTable.shift
-            newTable.scale = oldTable.scale
-        end
-    end
 
     --- Objeto a minar
     Entity.minable.results = { {
@@ -460,27 +443,32 @@ function This_MOD.create_entity(space)
         --- Validación
         if not Entity.next_upgrade then return end
 
-        --- Procesar el nombre
+        --- Validar si ya fue procesado
         local That_MOD =
             GMOD.get_id_and_name(Entity.next_upgrade) or
             { ids = "-", name = Entity.next_upgrade }
 
-        --- Nombre despues del aplicar el MOD
-        local New_name =
+        --- Identificar el tier
+        local Tier = string.gsub(That_MOD.name, This_MOD.splitter, "")
+        if not This_MOD.colors[Tier] then return end
+
+        --- Validar si ya fue procesado
+        local Name = string.gsub(That_MOD.name, This_MOD.splitter, This_MOD.entity_name)
+        Name =
             GMOD.name .. That_MOD.ids ..
             This_MOD.id .. "-" ..
-            That_MOD.name
+            Name
 
         --- La entidad ya existe
-        if GMOD.entities[New_name] ~= nil then
-            return New_name
+        if GMOD.entities[Name] ~= nil then
+            return Name
         end
 
         --- La entidad existirá
         for _, Spaces in pairs(This_MOD.to_be_processed) do
             for _, Space in pairs(Spaces) do
                 if Space.entity.name == Entity.next_upgrade then
-                    return New_name
+                    return Name
                 end
             end
         end
@@ -569,21 +557,21 @@ function This_MOD.create_recipe(space)
                 { ids = "-", name = name }
 
             --- Nombre despues de aplicar el MOD
-            local New_name =
+            local Name =
                 GMOD.name .. That_MOD.ids ..
                 This_MOD.id .. "-" ..
                 That_MOD.name
 
             --- La entidad ya existe
-            if GMOD.entities[New_name] ~= nil then
-                return New_name
+            if GMOD.entities[Name] ~= nil then
+                return Name
             end
 
             --- La entidad existirá
             for _, Spaces in pairs(This_MOD.to_be_processed) do
                 for _, Space in pairs(Spaces) do
                     if Space.entity.name == name then
-                        return New_name
+                        return Name
                     end
                 end
             end
