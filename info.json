@@ -4,7 +4,7 @@
   "title": "YAIM0425 d12b Compactors",
   "author": "YAIM0425",
   "factorio_version": "2.0",
-  "description": "Compress and decompress objects to fast transfers. [[I accept suggestions]]",
+  "description": "Compress and decompress objects to facilitate storage and transport. [[I accept suggestions]]",
   "homepage": "https://github.com/yaim0425/YAIM0425-d12b-compactors",
   "dependencies": [
     "YAIM0425-d00b-core"
