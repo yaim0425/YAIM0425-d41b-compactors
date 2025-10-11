@@ -898,8 +898,18 @@ function This_MOD.create_item___compact()
 
         --- Apodo
         Item.localised_description = { "" }
-        table.insert(Item.localised_description, Amount .. " ")
-        table.insert(Item.localised_description, "[item=" .. item.name .. "] ")
+        local Index = tostring(Amount)
+        for n = 1, #Index do
+            table.insert(
+                Item.localised_description,
+                "[img=virtual-signal.signal-" .. Index:sub(n, n) .. "]"
+            )
+        end
+
+        table.insert(
+            Item.localised_description,
+            "[item=" .. item.name .. "]"
+        )
 
         --- Nuevo subgrupo
         Item.subgroup = This_MOD.prefix .. item.subgroup
@@ -927,7 +937,7 @@ function This_MOD.create_item___compact()
 
             --- Actualizar el order
             Order = tonumber(Order) + 7 * (10 ^ (#Order - 1))
-            Subgroup.order = Order .. ""
+            Subgroup.order = tostring(Order)
         end
 
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
