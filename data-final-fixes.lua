@@ -131,8 +131,11 @@ function This_MOD.reference_values()
     This_MOD.new_subgroup = This_MOD.prefix .. This_MOD.name
     This_MOD.old_subgroup = GMOD.items["splitter"].subgroup
     This_MOD.item_subgroup = "item-" .. This_MOD.category_do
+
+    --- Puntos de referencia
     This_MOD.item_tech = "transport-belt"
     This_MOD.splitter = "splitter"
+    This_MOD.speed_base = GMOD.entities[This_MOD.item_tech].speed
 
     --- Valores a evitar
     This_MOD.ignore_types = { "armor" }
@@ -567,7 +570,9 @@ function This_MOD.create_entity(space)
     Entity.energy_usage = string.format("%dkW", math.floor((space.entity.speed / 0.03125) * 90))
 
     --- Velocidad de fabricación
-    Entity.crafting_speed = space.entity.speed
+    Entity.crafting_speed = space.entity.speed / This_MOD.speed_base
+    Entity.crafting_speed = math.floor(Entity.crafting_speed * 10 + 0.5)
+    Entity.crafting_speed = Entity.crafting_speed / 10
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
