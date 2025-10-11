@@ -124,8 +124,8 @@ function This_MOD.reference_values()
     This_MOD.furnace = GMOD.entities["electric-furnace"]
 
     --- Categorias de fabricación
-    This_MOD.category_do = "compressed"
-    This_MOD.category_undo = "uncompressed"
+    This_MOD.category_do = This_MOD.prefix .. "compressed"
+    This_MOD.category_undo = This_MOD.prefix .. "uncompressed"
 
     --- Nombre de los subgrupo
     This_MOD.new_subgroup = This_MOD.prefix .. This_MOD.name
@@ -419,9 +419,6 @@ function This_MOD.create_entity(space)
     Entity.localised_name = space.localised_name
     Entity.localised_description = { "", { "entity-description." .. This_MOD.prefix .. This_MOD.entity_name } }
 
-    --- Velocidad de fabricación
-    Entity.crafting_speed = space.entity.speed
-
     --- Elimnar propiedades inecesarias
     Entity.factoriopedia_simulation = nil
 
@@ -439,14 +436,14 @@ function This_MOD.create_entity(space)
     } }
 
     --- Siguiente tier
-    Entity.next_upgrade = (function()
+    Entity.next_upgrade = (function(entity)
         --- Validación
-        if not Entity.next_upgrade then return end
+        if not entity then return end
 
         --- Validar si ya fue procesado
         local That_MOD =
-            GMOD.get_id_and_name(Entity.next_upgrade) or
-            { ids = "-", name = Entity.next_upgrade }
+            GMOD.get_id_and_name(entity) or
+            { ids = "-", name = entity }
 
         --- Identificar el tier
         local Tier = string.gsub(That_MOD.name, This_MOD.splitter, "")
@@ -467,12 +464,110 @@ function This_MOD.create_entity(space)
         --- La entidad existirá
         for _, Spaces in pairs(This_MOD.to_be_processed) do
             for _, Space in pairs(Spaces) do
-                if Space.entity.name == Entity.next_upgrade then
+                if Space.entity.name == entity then
                     return Name
                 end
             end
         end
-    end)()
+    end)(space.entity.next_upgrade)
+
+    --- Cuerpo y explosion
+    Entity.corpse = "small-remnants"
+    Entity.dying_explosion = "explosion"
+
+    --- Vida
+    Entity.max_health = 180
+
+    --- Caja de colision y selección
+    Entity.collision_box = { { -0.2, -0.2 }, { 0.2, 0.2 } }
+    Entity.selection_box = { { -0.5, -0.5 }, { 0.5, 0.5 } }
+
+    --- Categorias de fabricación
+    -- Entity.crafting_categories = { This_MOD.category_do, This_MOD.category_undo }
+
+    --- Remplazó rapido
+    Entity.fast_replaceable_group = This_MOD.new_subgroup
+
+    --- Imagen de la entidad
+    Entity.graphics_set = {
+        animation = {
+            layers = {
+                {
+                    animation_speed = space.entity.speed,
+                    filename        = This_MOD.entity_graphics.base,
+                    shift           = { 0, 0 },
+                    width           = 96,
+                    height          = 96,
+                    scale           = 0.5,
+
+                    frame_count     = 60,
+                    line_length     = 10,
+                    priority        = "high",
+                },
+                {
+                    animation_speed = space.entity.speed,
+                    filename        = This_MOD.entity_graphics.mask,
+                    shift           = { 0, 0 },
+                    width           = 96,
+                    height          = 96,
+                    scale           = 0.5,
+
+                    repeat_count    = 60,
+                    priority        = "high",
+                    tint            = space.color,
+                },
+                {
+                    animation_speed = space.entity.speed,
+                    filename        = This_MOD.entity_graphics.shadow,
+                    shift           = { 0.5, 0 },
+                    width           = 144,
+                    height          = 96,
+                    scale           = 0.5,
+
+                    draw_as_shadow  = true,
+                    frame_count     = 60,
+                    line_length     = 10,
+                },
+            }
+        },
+        working_visualisations = { {
+            animation = {
+                animation_speed = space.entity.speed,
+                filename        = This_MOD.entity_graphics.working,
+                width           = 96,
+                height          = 96,
+                scale           = 0.5,
+
+                blend_mode      = "additive",
+                frame_count     = 30,
+                line_length     = 10,
+                priority        = "high",
+                tint            = space.color,
+                -- tint            = This_MOD.BrighterColor(space.color),
+            },
+            light     = {
+                color     = space.color,
+                -- color     = This_MOD.BrighterColor(space.color),
+                shift     = { 0, 0.25 },
+                intensity = 0.4,
+                size      = 3,
+            }
+        } }
+    }
+
+    --- Tipo de energía a usar
+    Entity.energy_source = {
+        emissions_per_minute = { pollution = (3 * 0.03125) / space.entity.speed },
+        usage_priority = "secondary-input",
+        type = "electric",
+        drain = "15kW"
+    }
+
+    --- Energía a consumir
+    Entity.energy_usage = string.format("%dkW", math.floor((space.entity.speed / 0.03125) * 90))
+
+    --- Velocidad de fabricación
+    Entity.crafting_speed = space.entity.speed
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -674,6 +769,17 @@ function This_MOD.create_tech(space)
     GMOD.extend(Tech)
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+end
+
+---------------------------------------------------------------------------
+
+function This_MOD.BrighterColor(color)
+    local White = 240
+    return {
+        r = math.floor((color.r + White) / 2),
+        g = math.floor((color.g + White) / 2),
+        b = math.floor((color.b + White) / 2)
+    }
 end
 
 ---------------------------------------------------------------------------
