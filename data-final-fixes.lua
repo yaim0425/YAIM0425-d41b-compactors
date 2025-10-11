@@ -138,8 +138,8 @@ function This_MOD.reference_values()
     This_MOD.speed_base = GMOD.entities[This_MOD.item_tech].speed
 
     --- Valores a evitar
-    This_MOD.ignore_types = { "armor" }
-    This_MOD.ignore_items = { "pistol" }
+    This_MOD.ignore_types = { ["armor"] = true }
+    This_MOD.ignore_items = { ["pistol"] = true }
 
     --- Colores a usar
     This_MOD.colors = {
@@ -287,11 +287,35 @@ function This_MOD.get_elements()
 
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-    --- Preparar los datos a usar
+    --- Item a afectar
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
+    local function get_item(item)
+        if GMOD.get_key(item.flags, "not-stackable") then return end
+        if This_MOD.ignore_types[item.type] then return end
+        if This_MOD.ignore_items[item.name] then return end
+        This_MOD.items[item.name] = item
+    end
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    --- Valores a afectar
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    --- Entidad que se va a duplicar
     for _, entity in pairs(data.raw.splitter) do
         valide_entity(GMOD.get_item_create(entity, GMOD.parameter.get_item_create.place_result), entity)
+    end
+
+    --- Item a afectar
+    This_MOD.items = {}
+    for _, item in pairs(GMOD.items) do
+        get_item(item)
     end
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
