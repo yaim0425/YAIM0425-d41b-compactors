@@ -34,7 +34,7 @@ function This_MOD.start()
             This_MOD.create_subgroup(space)
             This_MOD.create_item(space)
             This_MOD.create_entity(space)
-            -- This_MOD.create_recipe(space)
+            This_MOD.create_recipe(space)
             -- This_MOD.create_tech(space)
 
             --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -620,7 +620,7 @@ function This_MOD.create_recipe(space)
     Recipe.name = space.name
 
     --- Apodo y descripción
-    Recipe.localised_name = GMOD.copy(space.entity.localised_name)
+    Recipe.localised_name = space.localised_name
     Recipe.localised_description = { "", { "entity-description." .. This_MOD.prefix .. This_MOD.entity_name } }
 
     --- Elimnar propiedades inecesarias
@@ -639,26 +639,27 @@ function This_MOD.create_recipe(space)
     --- Habilitar la receta
     Recipe.enabled = space.tech == nil
 
-    --- Actualizar Order
-    local Order = tonumber(Recipe.order) + 1
-    Recipe.order = GMOD.pad_left_zeros(#Recipe.order, Order)
-
     --- Ingredientes
     for _, ingredient in pairs(Recipe.ingredients) do
         ingredient.name = (function(name)
             --- Validación
             if not name then return end
 
-            --- Procesar el nombre
+            --- Validar si ya fue procesado
             local That_MOD =
                 GMOD.get_id_and_name(name) or
                 { ids = "-", name = name }
 
-            --- Nombre despues de aplicar el MOD
-            local Name =
+            --- Identificar el tier
+            local Tier = string.gsub(That_MOD.name, This_MOD.splitter, "")
+            if not This_MOD.colors[Tier] then return end
+
+            --- Validar si ya fue procesado
+            local Name = string.gsub(That_MOD.name, This_MOD.splitter, This_MOD.entity_name)
+            Name =
                 GMOD.name .. That_MOD.ids ..
                 This_MOD.id .. "-" ..
-                That_MOD.name
+                Name
 
             --- La entidad ya existe
             if GMOD.entities[Name] ~= nil then
