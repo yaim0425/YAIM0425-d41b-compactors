@@ -546,11 +546,9 @@ function This_MOD.create_entity(space)
                 line_length     = 10,
                 priority        = "high",
                 tint            = space.color,
-                -- tint            = This_MOD.BrighterColor(space.color),
             },
             light     = {
                 color     = space.color,
-                -- color     = This_MOD.BrighterColor(space.color),
                 shift     = { 0, 0.25 },
                 intensity = 0.4,
                 size      = 3,
@@ -774,17 +772,6 @@ function This_MOD.create_tech(space)
     GMOD.extend(Tech)
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-end
-
----------------------------------------------------------------------------
-
-function This_MOD.BrighterColor(color)
-    local White = 240
-    return {
-        r = math.floor((color.r + White) / 2),
-        g = math.floor((color.g + White) / 2),
-        b = math.floor((color.b + White) / 2)
-    }
 end
 
 ---------------------------------------------------------------------------
