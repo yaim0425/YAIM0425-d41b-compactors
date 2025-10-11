@@ -35,7 +35,7 @@ function This_MOD.start()
             This_MOD.create_item(space)
             This_MOD.create_entity(space)
             This_MOD.create_recipe(space)
-            -- This_MOD.create_tech(space)
+            This_MOD.create_tech(space)
 
             --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
         end
@@ -733,17 +733,22 @@ function This_MOD.create_tech(space)
     Tech.name = space.name .. "-tech"
 
     --- Apodo y descripción
-    Tech.localised_name = GMOD.copy(space.entity.localised_name)
+    Tech.localised_name = space.localised_name
     Tech.localised_description = { "", { "entity-description." .. This_MOD.prefix .. This_MOD.entity_name } }
 
     --- Cambiar icono
     Tech.icons = {
-        { icon = This_MOD.tech_graphics.base },
-        { icon = This_MOD.tech_graphics.mask, tint = space.color },
+        { icon = This_MOD.tech_graphics.base, icon_size = 128 },
+        { icon = This_MOD.tech_graphics.mask, icon_size = 128, tint = space.color },
     }
 
     --- Tech previas
     Tech.prerequisites = { space.tech.name }
+    for _, ingredient in pairs(data.raw.recipe[space.name].ingredients) do
+        if GMOD.has_id(ingredient.name, This_MOD.id) then
+            Tech.prerequisites = { ingredient.name .. "-tech" }
+        end
+    end
 
     --- Efecto de la tech
     Tech.effects = { {
@@ -755,7 +760,7 @@ function This_MOD.create_tech(space)
     if Tech.research_trigger then
         Tech.research_trigger = {
             type = "craft-item",
-            item = space.item.name,
+            item = space.belt,
             count = 1
         }
     end
