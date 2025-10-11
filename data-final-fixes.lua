@@ -41,6 +41,10 @@ function This_MOD.start()
         end
     end
 
+    --- Crear las recetas y los objetos comprimidos
+    This_MOD.create_item___compact()
+    This_MOD.create_recipe___compact()
+
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 end
 
@@ -98,7 +102,7 @@ function This_MOD.reference_values()
     This_MOD.arrow_d___icon = { icon = This_MOD.icon_graphics.arrow_d, scale = 0.30 }
 
     This_MOD.indicator = {
-        icon  = data.raw["virtual-signal"]["signal-item-parameter"].icons[1].icon,
+        icon  = GMOD.signal["item-parameter"],
         scale = 0.15,
         shift = { -14, -14 }
     }
@@ -130,7 +134,6 @@ function This_MOD.reference_values()
     --- Nombre de los subgrupo
     This_MOD.new_subgroup = This_MOD.prefix .. This_MOD.name
     This_MOD.old_subgroup = GMOD.items["splitter"].subgroup
-    This_MOD.item_subgroup = "item-" .. This_MOD.category_do
 
     --- Puntos de referencia
     This_MOD.item_tech = "transport-belt"
@@ -185,6 +188,16 @@ function This_MOD.reference_values()
         ingredients = {},
         results = {}
     }
+
+    --- Propiedades a duplicar
+    This_MOD.properties = {}
+    table.insert(This_MOD.properties, "localised_name")
+    table.insert(This_MOD.properties, "inventory_move_sound")
+    table.insert(This_MOD.properties, "pick_sound")
+    table.insert(This_MOD.properties, "drop_sound")
+    table.insert(This_MOD.properties, "stack_size")
+    table.insert(This_MOD.properties, "order")
+    table.insert(This_MOD.properties, "icons")
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 end
@@ -805,6 +818,151 @@ function This_MOD.create_tech(space)
     GMOD.extend(Tech)
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+end
+
+---------------------------------------------------------------------------
+
+function This_MOD.create_item___compact()
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    --- Función de procesamiento
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    local function create_item(item)
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Calcular el valor a utilizar
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        local Amount = This_MOD.setting.amount
+        if This_MOD.setting.stack_size then
+            Amount = Amount * item.stack_size
+            if Amount > 65000 then
+                Amount = 65000
+            end
+        end
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Validación
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        local That_MOD =
+            GMOD.get_id_and_name(item.name) or
+            { ids = "-", name = item.name }
+
+        local Name =
+            GMOD.name .. That_MOD.ids ..
+            This_MOD.id .. "-" .. (
+                This_MOD.setting.stack_size and
+                item.stack_size .. "x" .. This_MOD.setting.amount or
+                Amount
+            ) .. "u-" ..
+            That_MOD.name
+
+        if GMOD.items[Name] then return end
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Duplicar el objeto
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        local Item = {}
+        for _, name in pairs(This_MOD.properties) do
+            Item[name] = GMOD.copy(item[name])
+        end
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Cambiar algunas propiedades
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        --- Cambiar tipo
+        Item.type = "item"
+
+        --- Nombre
+        Item.name = This_MOD.prefix .. item.name .. "-x" .. This_MOD.amount
+
+        --- Apodo
+        Item.localised_description = { "" }
+        table.insert(Item.localised_description, Amount .. " ")
+        table.insert(Item.localised_description, "[item=" .. item.name .. "] ")
+
+        --- Nuevo subgrupo
+        Item.subgroup = This_MOD.prefix .. item.subgroup
+
+        --- Agregar indicador del MOD
+        table.insert(Item.icons, This_MOD.indicator)
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Crear el subgrupo para el objeto
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        --- Duplicar el subgrupo
+        if not GMOD.subgroups[Item.subgroup] then
+            GMOD.duplicate_subgroup(item.subgroup, Item.subgroup)
+
+            --- Renombrar
+            local Subgroup = GMOD.subgroups[Item.subgroup]
+            local Order = GMOD.subgroups[item.subgroup].order
+
+            --- Actualizar el order
+            Order = tonumber(Order) + 7 * (10 ^ (#Order - 1))
+            Subgroup.order = Order .. ""
+        end
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Crear el prototipo
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        GMOD.extend(Item)
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    end
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    --- Recorrer los objetos seleccionados
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    for _, item in pairs(This_MOD.items) do
+        create_item(item)
+    end
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+end
+
+function This_MOD.create_recipe___compact()
 end
 
 ---------------------------------------------------------------------------
