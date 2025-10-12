@@ -172,23 +172,6 @@ function This_MOD.reference_values()
         ["se-deep-space--yellow"]  = { r = 255, g = 255, b = 000 },
     }
 
-    --- Receta base
-    This_MOD.recipe_base = {
-        type = "recipe",
-        name = "",
-        localised_name = {},
-        localised_description = {},
-        energy_required = 1,
-
-        hide_from_player_crafting = true,
-        category = "",
-        subgroup = "",
-        order = "",
-
-        ingredients = {},
-        results = {}
-    }
-
     --- Propiedades a duplicar
     This_MOD.properties = {}
     table.insert(This_MOD.properties, "localised_name")
@@ -305,6 +288,7 @@ function This_MOD.get_elements()
 
     local function get_item(item)
         if GMOD.get_key(item.flags, "not-stackable") then return end
+        if GMOD.get_key(item.flags, "spawnable") then return end
         if This_MOD.ignore_types[item.type] then return end
         if This_MOD.ignore_items[item.name] then return end
         This_MOD.items[item.name] = item
@@ -523,7 +507,7 @@ function This_MOD.create_entity(space)
     Entity.selection_box = { { -0.5, -0.5 }, { 0.5, 0.5 } }
 
     --- Categorias de fabricación
-    -- Entity.crafting_categories = { This_MOD.category_do, This_MOD.category_undo }
+    Entity.crafting_categories = { This_MOD.category_do, This_MOD.category_undo }
 
     --- Remplazó rapido
     Entity.fast_replaceable_group = This_MOD.new_subgroup
@@ -856,7 +840,8 @@ function This_MOD.create_item___compact()
 
         local Name =
             GMOD.name .. That_MOD.ids ..
-            This_MOD.id .. "-" .. (
+            This_MOD.id .. "-" ..
+            (
                 This_MOD.setting.stack_size and
                 item.stack_size .. "x" .. This_MOD.setting.amount or
                 Amount
@@ -894,7 +879,7 @@ function This_MOD.create_item___compact()
         Item.type = "item"
 
         --- Nombre
-        Item.name = This_MOD.prefix .. item.name .. "-x" .. This_MOD.amount
+        Item.name = Name
 
         --- Apodo
         Item.localised_description = { "" }
@@ -973,6 +958,140 @@ function This_MOD.create_item___compact()
 end
 
 function This_MOD.create_recipe___compact()
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    --- Función de procesamiento
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    local function create_recipe(item, category)
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Calcular el valor a utilizar
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        local Amount = This_MOD.setting.amount
+        if This_MOD.setting.stack_size then
+            Amount = Amount * item.stack_size
+            if Amount > 65000 then
+                Amount = 65000
+            end
+        end
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Validación
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        local That_MOD =
+            GMOD.get_id_and_name(item.name) or
+            { ids = "-", name = item.name }
+
+        local Name =
+            GMOD.name .. That_MOD.ids ..
+            This_MOD.id .. "-" ..
+            category .. "-" ..
+            (
+                This_MOD.setting.stack_size and
+                item.stack_size .. "x" .. This_MOD.setting.amount or
+                Amount
+            ) .. "u-" ..
+            That_MOD.name
+
+        if data.raw.recipe[Name] then return end
+
+        local Item_name =
+            GMOD.name .. That_MOD.ids ..
+            This_MOD.id .. "-" ..
+            (
+                This_MOD.setting.stack_size and
+                item.stack_size .. "x" .. This_MOD.setting.amount or
+                Amount
+            ) .. "u-" ..
+            That_MOD.name
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Receta
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        local Recipe = {}
+
+        Recipe.type = "recipe"
+        Recipe.name = Name
+        Recipe.localised_name = util.copy(item.localised_name)
+
+        Recipe.icons = util.copy(item.icons)
+
+        Recipe.category = category
+
+        Recipe.allow_decomposition = false
+        Recipe.allow_as_intermediate = false
+        Recipe.hide_from_player_crafting = true
+
+        --- Identificar el proceso a usar
+        if category == This_MOD.category_do then
+            Recipe.results = { { type = "item", name = Item_name, amount = 1 } }
+            Recipe.ingredients = { { type = "item", name = item.name, amount = Amount } }
+            table.insert(Recipe.icons, This_MOD.arrow_d___icon)
+        else
+            Recipe.ingredients = { { type = "item", name = Item_name, amount = 1 } }
+            Recipe.results = { { type = "item", name = item.name, amount = Amount } }
+            table.insert(Recipe.icons, This_MOD.arrow_u___icon)
+        end
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Crear el prototipo
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        GMOD.extend(Recipe)
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    end
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    --- Recorrer los objetos seleccionados
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    for _, item in pairs(This_MOD.items) do
+        create_recipe(item, This_MOD.category_do)
+        create_recipe(item, This_MOD.category_undo)
+    end
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    --- Crear las categorias de fabricación
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    GMOD.extend(
+        { type = "recipe-category", name = This_MOD.category_do },
+        { type = "recipe-category", name = This_MOD.category_undo }
+    )
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 end
 
 ---------------------------------------------------------------------------
