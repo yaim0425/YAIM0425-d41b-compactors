@@ -1250,25 +1250,9 @@ function This_MOD.create_tech___compact()
         Item = GMOD.items[Item.name]
 
         --- Tech previa
-        local Prerequisites = GMOD.get_technology(GMOD.recipes[item.name])
+        local Prerequisites = GMOD.get_technology(GMOD.recipes[item.name], true)
         if not Prerequisites then
             data.raw.recipe[Name].enabled = true
-            return
-        end
-
-        if not
-            (function()
-                for _, effect in pairs(Prerequisites.effects or {}) do
-                    for _, recipe in pairs(GMOD.recipes[item.name] or {}) do
-                        if effect.type == "unlock-recipe" then
-                            if effect.recipe == recipe.name then
-                                return true
-                            end
-                        end
-                    end
-                end
-            end)()
-        then
             return
         end
 
