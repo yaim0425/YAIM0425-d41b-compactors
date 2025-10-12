@@ -17,7 +17,7 @@ GMOD[This_MOD.id] = This_MOD
 ---------------------------------------------------------------------------
 
 function This_MOD.start()
-    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+--- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
     --- Valores de la referencia
     This_MOD.reference_values()
@@ -44,6 +44,7 @@ function This_MOD.start()
     --- Crear las recetas y los objetos comprimidos
     This_MOD.create_item___compact()
     This_MOD.create_recipe___compact()
+    This_MOD.create_tech___compact()
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 end
