@@ -128,8 +128,8 @@ function This_MOD.reference_values()
     This_MOD.furnace = GMOD.entities["electric-furnace"]
 
     --- Categorias de fabricación
-    This_MOD.category_do = This_MOD.prefix .. "compressed"
-    This_MOD.category_undo = This_MOD.prefix .. "uncompressed"
+    This_MOD.category_do = "compressed"
+    This_MOD.category_undo = "uncompressed"
 
     --- Nombre de los subgrupo
     This_MOD.new_subgroup = This_MOD.prefix .. This_MOD.name
@@ -399,7 +399,19 @@ function This_MOD.create_item(space)
 
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-    ---- Crear el prototipo
+    --- Guardar para afectar
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    This_MOD.items[Item.name] = Item
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    --- Crear el prototipo
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
     GMOD.extend(Item)
@@ -507,7 +519,10 @@ function This_MOD.create_entity(space)
     Entity.selection_box = { { -0.5, -0.5 }, { 0.5, 0.5 } }
 
     --- Categorias de fabricación
-    Entity.crafting_categories = { This_MOD.category_do, This_MOD.category_undo }
+    Entity.crafting_categories = {
+        This_MOD.prefix .. This_MOD.category_do,
+        This_MOD.prefix .. This_MOD.category_undo
+    }
 
     --- Remplazó rapido
     Entity.fast_replaceable_group = This_MOD.new_subgroup
@@ -896,8 +911,15 @@ function This_MOD.create_item___compact()
             "[item=" .. item.name .. "]"
         )
 
-        --- Nuevo subgrupo
-        Item.subgroup = This_MOD.prefix .. item.subgroup
+        --- Nombre del nuevo subgrupo
+        That_MOD =
+            GMOD.get_id_and_name(item.subgroup) or
+            { ids = "-", name = item.subgroup }
+
+        Item.subgroup =
+            GMOD.name .. That_MOD.ids ..
+            This_MOD.id .. "-" ..
+            That_MOD.name
 
         --- Agregar indicador del MOD
         table.insert(Item.icons, This_MOD.indicator)
@@ -1011,6 +1033,7 @@ function This_MOD.create_recipe___compact()
                 Amount
             ) .. "u-" ..
             That_MOD.name
+
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
 
@@ -1021,29 +1044,78 @@ function This_MOD.create_recipe___compact()
         --- Receta
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
+        --- Nueva receta
         local Recipe = {}
 
+        ---- Tipo, nombre y apodo
         Recipe.type = "recipe"
         Recipe.name = Name
         Recipe.localised_name = util.copy(item.localised_name)
 
+        --- iconos
         Recipe.icons = util.copy(item.icons)
 
-        Recipe.category = category
+        --- Categoria
+        Recipe.category = This_MOD.prefix .. category
 
+        --- Nuevo subgrupo
+        That_MOD =
+            GMOD.get_id_and_name(item.subgroup) or
+            { ids = "-", name = item.subgroup }
+
+        Recipe.subgroup =
+            GMOD.name .. That_MOD.ids ..
+            This_MOD.id .. "-" ..
+            category .. "-" ..
+            That_MOD.name
+
+        --- Opciones binarias
         Recipe.allow_decomposition = false
         Recipe.allow_as_intermediate = false
         Recipe.hide_from_player_crafting = true
 
-        --- Identificar el proceso a usar
+        --- Compresión
         if category == This_MOD.category_do then
+            --- Ingredientes y resultado
             Recipe.results = { { type = "item", name = Item_name, amount = 1 } }
             Recipe.ingredients = { { type = "item", name = item.name, amount = Amount } }
+
+            --- Indicador del MOD
             table.insert(Recipe.icons, This_MOD.arrow_d___icon)
-        else
+        end
+
+        --- Descompresión
+        if category == This_MOD.category_undo then
+            --- Ingredientes y resultado
             Recipe.ingredients = { { type = "item", name = Item_name, amount = 1 } }
             Recipe.results = { { type = "item", name = item.name, amount = Amount } }
+
+            --- Indicador del MOD
             table.insert(Recipe.icons, This_MOD.arrow_u___icon)
+        end
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Crear el subgrupo para el objeto
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        --- Duplicar el subgrupo
+        if not GMOD.subgroups[Recipe.subgroup] then
+            GMOD.duplicate_subgroup(item.subgroup, Recipe.subgroup)
+
+            --- Renombrar
+            local Subgroup = GMOD.subgroups[Recipe.subgroup]
+            local Order = GMOD.subgroups[item.subgroup].order
+            local Index = category == This_MOD.category_undo and 6 or 8
+
+            --- Actualizar el order
+            Order = tonumber(Order) + Index * (10 ^ (#Order - 1))
+            Subgroup.order = tostring(Order)
         end
 
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -1087,8 +1159,8 @@ function This_MOD.create_recipe___compact()
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
     GMOD.extend(
-        { type = "recipe-category", name = This_MOD.category_do },
-        { type = "recipe-category", name = This_MOD.category_undo }
+        { type = "recipe-category", name = This_MOD.prefix .. This_MOD.category_do },
+        { type = "recipe-category", name = This_MOD.prefix .. This_MOD.category_undo }
     )
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
