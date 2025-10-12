@@ -925,7 +925,10 @@ function This_MOD.create_item___compact()
             That_MOD.name
 
         --- Agregar indicador del MOD
-        table.insert(Item.icons, This_MOD.indicator)
+        table.insert(Item.icons, GMOD.copy(This_MOD.indicator))
+        if GMOD.has_id(Item.name, "d01b") then
+            Item.icons[#Item.icons].scale = 0.23
+        end
 
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
