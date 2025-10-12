@@ -17,7 +17,7 @@ GMOD[This_MOD.id] = This_MOD
 ---------------------------------------------------------------------------
 
 function This_MOD.start()
---- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
     --- Valores de la referencia
     This_MOD.reference_values()
@@ -1078,10 +1078,11 @@ function This_MOD.create_recipe___compact()
             category .. "-" ..
             That_MOD.name
 
-        --- Opciones binarias
-        Recipe.allow_decomposition = false
-        Recipe.allow_as_intermediate = false
-        Recipe.hide_from_player_crafting = true
+        --- Ocultar receta del menú del jugador
+        Recipe.hide_from_player_crafting = category == This_MOD.category_do
+
+        --- Desactivar la recetas
+        Recipe.enabled = false
 
         --- Compresión
         if category == This_MOD.category_do then
@@ -1164,6 +1165,19 @@ function This_MOD.create_recipe___compact()
 
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    --- Permirte la descompresión sin la maquina
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    table.insert(data.raw["character"].character.crafting_categories, This_MOD.prefix .. This_MOD.category_undo)
+    table.insert(data.raw["god-controller"].default.crafting_categories, This_MOD.prefix .. This_MOD.category_undo)
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
     --- Crear las categorias de fabricación
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -1220,16 +1234,43 @@ function This_MOD.create_tech___compact()
 
         if not data.raw.recipe[Name] then return end
 
-        local Item = GMOD.items[
-        GMOD.name .. That_MOD.ids ..
-        This_MOD.id .. "-" ..
-        (
-            This_MOD.setting.stack_size and
-            item.stack_size .. "x" .. This_MOD.setting.amount or
-            Amount
-        ) .. "u-" ..
-        That_MOD.name
-        ]
+        --- El objeto comprimido
+        local Item = {
+            name =
+                GMOD.name .. That_MOD.ids ..
+                This_MOD.id .. "-" ..
+                (
+                    This_MOD.setting.stack_size and
+                    item.stack_size .. "x" .. This_MOD.setting.amount or
+                    Amount
+                ) .. "u-" ..
+                That_MOD.name
+        }
+
+        Item = GMOD.items[Item.name]
+
+        --- Tech previa
+        local Prerequisites = GMOD.get_technology(GMOD.recipes[item.name])
+        if not Prerequisites then
+            data.raw.recipe[Name].enabled = true
+            return
+        end
+
+        if not
+            (function()
+                for _, effect in pairs(Prerequisites.effects or {}) do
+                    for _, recipe in pairs(GMOD.recipes[item.name] or {}) do
+                        if effect.type == "unlock-recipe" then
+                            if effect.recipe == recipe.name then
+                                return true
+                            end
+                        end
+                    end
+                end
+            end)()
+        then
+            return
+        end
 
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -1238,12 +1279,33 @@ function This_MOD.create_tech___compact()
 
 
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-        --- Cambiar algunas propiedades
+        --- Cargar la tech
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-        local Tech = {}
+        --- Cargar la tech
+        local Tech = data.raw.technology[Item.name .. "-tech"] or {}
 
-        --- Nombre
+        --- Agregar la receta
+        if Tech.name then
+            table.insert(Tech.effects, {
+                type = "unlock-recipe",
+                recipe = Name
+            })
+            return
+        end
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Crear la tech
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        --- Tipo y nombre
+        Tech.type = "technology"
         Tech.name = Item.name .. "-tech"
 
         --- Apodo y descripción
@@ -1252,6 +1314,14 @@ function This_MOD.create_tech___compact()
 
         --- Cambiar icono
         Tech.icons = Item.icons
+        for _, icon in pairs(Tech.icons) do
+            icon.icon_size = icon.icon_size or 64
+            -- icon.scale = (icon.scale or 1) * 0.5
+            icon.scale = icon.scale or 0.5
+        end
+
+        --- Tech previas
+        Tech.prerequisites = { Prerequisites.name }
 
         --- Efecto de la tech
         Tech.effects = { {
@@ -1263,7 +1333,7 @@ function This_MOD.create_tech___compact()
         Tech.research_trigger = {
             type = "craft-item",
             item = item.name,
-            count = 1
+            count = Amount
         }
 
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
