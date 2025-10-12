@@ -1179,7 +1179,105 @@ function This_MOD.create_tech___compact()
     --- Función de procesamiento
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    local function create_tech(item)
+    local function create_tech(item, category)
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Calcular el valor a utilizar
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        local Amount = This_MOD.setting.amount
+        if This_MOD.setting.stack_size then
+            Amount = Amount * item.stack_size
+            if Amount > 65000 then
+                Amount = 65000
+            end
+        end
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Validación
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        local That_MOD =
+            GMOD.get_id_and_name(item.name) or
+            { ids = "-", name = item.name }
+
+        local Name =
+            GMOD.name .. That_MOD.ids ..
+            This_MOD.id .. "-" ..
+            category .. "-" ..
+            (
+                This_MOD.setting.stack_size and
+                item.stack_size .. "x" .. This_MOD.setting.amount or
+                Amount
+            ) .. "u-" ..
+            That_MOD.name
+
+        if not data.raw.recipe[Name] then return end
+
+        local Item = GMOD.items[
+        GMOD.name .. That_MOD.ids ..
+        This_MOD.id .. "-" ..
+        (
+            This_MOD.setting.stack_size and
+            item.stack_size .. "x" .. This_MOD.setting.amount or
+            Amount
+        ) .. "u-" ..
+        That_MOD.name
+        ]
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Cambiar algunas propiedades
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        local Tech = {}
+
+        --- Nombre
+        Tech.name = Item.name .. "-tech"
+
+        --- Apodo y descripción
+        Tech.localised_name = Item.localised_name
+        Tech.localised_description = { "" }
+
+        --- Cambiar icono
+        Tech.icons = Item.icons
+
+        --- Efecto de la tech
+        Tech.effects = { {
+            type = "unlock-recipe",
+            recipe = Name
+        } }
+
+        --- Tech se activa con una fabricación
+        Tech.research_trigger = {
+            type = "craft-item",
+            item = item.name,
+            count = 1
+        }
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Crear el prototipo
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        GMOD.extend(Tech)
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
     end
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -1193,7 +1291,8 @@ function This_MOD.create_tech___compact()
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
     for _, item in pairs(This_MOD.items) do
-        create_tech(item)
+        create_tech(item, This_MOD.category_do)
+        create_tech(item, This_MOD.category_undo)
     end
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
