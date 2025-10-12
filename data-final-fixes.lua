@@ -897,7 +897,10 @@ function This_MOD.create_item___compact()
         Item.name = Name
 
         --- Apodo
-        Item.localised_description = { "" }
+        Item.localised_description = { "",
+            "[img=virtual-signal.signal-stack-size]"
+        }
+
         local Index = tostring(Amount)
         for n = 1, #Index do
             table.insert(
