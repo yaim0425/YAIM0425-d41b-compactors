@@ -663,10 +663,6 @@ function This_MOD.create_recipe(space)
     --- Elimnar propiedades inecesarias
     Recipe.main_product = nil
 
-    --- Productividad
-    Recipe.allow_productivity = true
-    Recipe.maximum_productivity = 1000000
-
     --- Cambiar icono
     Recipe.icons = {
         { icon = This_MOD.icon_graphics.base },
