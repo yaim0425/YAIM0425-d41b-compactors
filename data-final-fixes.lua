@@ -694,6 +694,18 @@ function This_MOD.create_entity(space)
 
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    --- Crear el prototipo
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    GMOD.extend(Entity)
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
     --- Crear las categorias de fabricación
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -709,10 +721,11 @@ function This_MOD.create_entity(space)
 
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-    --- Crear el prototipo
+    --- Permirte la descompresión sin la maquina
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    GMOD.extend(Entity)
+    table.insert(data.raw["character"].character.crafting_categories, This_MOD.prefix .. This_MOD.category_undo)
+    table.insert(data.raw["god-controller"].default.crafting_categories, This_MOD.prefix .. This_MOD.category_undo)
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 end
@@ -1039,7 +1052,6 @@ function This_MOD.create_item___compact()
 end
 
 function This_MOD.create_recipe___compact()
-    if true then return end
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
     --- Función de procesamiento
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -1208,19 +1220,6 @@ function This_MOD.create_recipe___compact()
         create_recipe(item, This_MOD.category_do)
         create_recipe(item, This_MOD.category_undo)
     end
-
-    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-
-
-
-
-    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-    --- Permirte la descompresión sin la maquina
-    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-    table.insert(data.raw["character"].character.crafting_categories, This_MOD.prefix .. This_MOD.category_undo)
-    table.insert(data.raw["god-controller"].default.crafting_categories, This_MOD.prefix .. This_MOD.category_undo)
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 end
