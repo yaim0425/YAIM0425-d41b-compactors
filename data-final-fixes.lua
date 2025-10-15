@@ -1232,9 +1232,7 @@ function This_MOD.create_tech___compact()
         Tech.localised_description = { "" }
 
         --- Cambiar icono
-        Tech.icons = space.item.icons
-        Tech.icons = GMOD.items[space.item_name].icons
-        Tech.icons = GMOD.copy(Tech.icons)
+        Tech.icons = GMOD.copy(GMOD.items[space.item_name].icons)
         for _, icon in pairs(Tech.icons) do
             icon.icon_size = icon.icon_size or 64
             icon.scale = icon.scale or 0.5
