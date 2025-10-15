@@ -288,11 +288,87 @@ function This_MOD.get_elements()
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
     local function get_item(item)
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Validación
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
         if GMOD.get_key(item.flags, "not-stackable") then return end
         if GMOD.get_key(item.flags, "spawnable") then return end
         if This_MOD.ignore_types[item.type] then return end
         if This_MOD.ignore_items[item.name] then return end
-        This_MOD.items[item.name] = item
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Valores a usar
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        --- Contenedor de la info
+        local Space = {}
+
+        --- Guardar el objeto
+        Space.item = item
+
+        --- Calcular la cantidad
+        Space.amount = This_MOD.setting.amount
+        if This_MOD.setting.stack_size then
+            Space.amount = Space.amount * item.stack_size
+            if Space.amount > 65000 then
+                Space.amount = 65000
+            end
+        end
+
+        --- Separar el nombre
+        local That_MOD =
+            GMOD.get_id_and_name(item.name) or
+            { ids = "-", name = item.name }
+
+        --- Valores comunes
+        local Prefix =
+            GMOD.name .. That_MOD.ids ..
+            This_MOD.id .. "-"
+
+        local Amount = (
+                This_MOD.setting.stack_size and
+                item.stack_size .. "x" .. This_MOD.setting.amount or
+                Space.amount
+            ) .. "u-" ..
+            That_MOD.name
+
+        --- Nombre del objeto
+        Space.item_name =
+            Prefix ..
+            Amount
+
+        --- Nombre de la recetas
+        Space.do_name =
+            Prefix ..
+            This_MOD.category_do .. "-" ..
+            Amount
+
+        Space.undo_name =
+            Prefix ..
+            This_MOD.category_undo .. "-" ..
+            Amount
+
+        --- Nombre del nuevo subgrupo
+        That_MOD =
+            GMOD.get_id_and_name(Space.item.subgroup) or
+            { ids = "-", name = Space.item.subgroup }
+
+        Space.subgroup =
+            GMOD.name .. That_MOD.ids ..
+            This_MOD.id .. "-" ..
+            That_MOD.name
+
+        --- Guardar los valores
+        This_MOD.items[item.name] = Space
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
     end
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -307,7 +383,9 @@ function This_MOD.get_elements()
 
     --- Entidad que se va a duplicar
     for _, entity in pairs(data.raw.splitter) do
-        valide_entity(GMOD.get_item_create(entity, GMOD.parameter.get_item_create.place_result), entity)
+        local Result = GMOD.parameter.get_item_create.place_result
+        Result = GMOD.get_item_create(entity, Result)
+        valide_entity(Result, entity)
     end
 
     --- Item a afectar
@@ -616,6 +694,21 @@ function This_MOD.create_entity(space)
 
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    --- Crear las categorias de fabricación
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    GMOD.extend(
+        { type = "recipe-category", name = This_MOD.prefix .. This_MOD.category_do },
+        { type = "recipe-category", name = This_MOD.prefix .. This_MOD.category_undo }
+    )
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
     --- Crear el prototipo
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -825,44 +918,12 @@ function This_MOD.create_item___compact()
     --- Función de procesamiento
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    local function create_item(item)
-        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-        --- Calcular el valor a utilizar
-        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-        local Amount = This_MOD.setting.amount
-        if This_MOD.setting.stack_size then
-            Amount = Amount * item.stack_size
-            if Amount > 65000 then
-                Amount = 65000
-            end
-        end
-
-        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-
-
-
-
+    local function create_item(space)
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
         --- Validación
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-        local That_MOD =
-            GMOD.get_id_and_name(item.name) or
-            { ids = "-", name = item.name }
-
-        local Name =
-            GMOD.name .. That_MOD.ids ..
-            This_MOD.id .. "-" ..
-            (
-                This_MOD.setting.stack_size and
-                item.stack_size .. "x" .. This_MOD.setting.amount or
-                Amount
-            ) .. "u-" ..
-            That_MOD.name
-
-        if GMOD.items[Name] then return end
+        if GMOD.items[space.name] then return end
 
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -876,7 +937,7 @@ function This_MOD.create_item___compact()
 
         local Item = {}
         for _, name in pairs(This_MOD.properties) do
-            Item[name] = GMOD.copy(item[name])
+            Item[name] = GMOD.copy(space.item[name])
         end
 
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -893,14 +954,14 @@ function This_MOD.create_item___compact()
         Item.type = "item"
 
         --- Nombre
-        Item.name = Name
+        Item.name = space.item_name
 
         --- Apodo
         Item.localised_description = { "",
             "[img=virtual-signal.signal-stack-size]"
         }
 
-        local Index = tostring(Amount)
+        local Index = tostring(space.amount)
         for n = 1, #Index do
             table.insert(
                 Item.localised_description,
@@ -910,18 +971,11 @@ function This_MOD.create_item___compact()
 
         table.insert(
             Item.localised_description,
-            "[item=" .. item.name .. "]"
+            "[item=" .. space.item.name .. "]"
         )
 
         --- Nombre del nuevo subgrupo
-        That_MOD =
-            GMOD.get_id_and_name(item.subgroup) or
-            { ids = "-", name = item.subgroup }
-
-        Item.subgroup =
-            GMOD.name .. That_MOD.ids ..
-            This_MOD.id .. "-" ..
-            That_MOD.name
+        Item.subgroup = space.subgroup
 
         --- Agregar indicador del MOD
         table.insert(Item.icons, GMOD.copy(This_MOD.indicator))
@@ -941,11 +995,11 @@ function This_MOD.create_item___compact()
 
         --- Duplicar el subgrupo
         if not GMOD.subgroups[Item.subgroup] then
-            GMOD.duplicate_subgroup(item.subgroup, Item.subgroup)
+            GMOD.duplicate_subgroup(space.item.subgroup, Item.subgroup)
 
             --- Renombrar
             local Subgroup = GMOD.subgroups[Item.subgroup]
-            local Order = GMOD.subgroups[item.subgroup].order
+            local Order = GMOD.subgroups[space.item.subgroup].order
 
             --- Actualizar el order
             Order = tonumber(Order) + 7 * (10 ^ (#Order - 1))
@@ -977,14 +1031,15 @@ function This_MOD.create_item___compact()
     --- Recorrer los objetos seleccionados
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    for _, item in pairs(This_MOD.items) do
-        create_item(item)
+    for _, space in pairs(This_MOD.items) do
+        create_item(space)
     end
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 end
 
 function This_MOD.create_recipe___compact()
+    if true then return end
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
     --- Función de procesamiento
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -1168,24 +1223,10 @@ function This_MOD.create_recipe___compact()
     table.insert(data.raw["god-controller"].default.crafting_categories, This_MOD.prefix .. This_MOD.category_undo)
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-
-
-
-
-    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-    --- Crear las categorias de fabricación
-    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-    GMOD.extend(
-        { type = "recipe-category", name = This_MOD.prefix .. This_MOD.category_do },
-        { type = "recipe-category", name = This_MOD.prefix .. This_MOD.category_undo }
-    )
-
-    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 end
 
 function This_MOD.create_tech___compact()
+    if true then return end
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
     --- Función de procesamiento
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
