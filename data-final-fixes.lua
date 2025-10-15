@@ -46,6 +46,9 @@ function This_MOD.start()
     This_MOD.create_recipe___compact()
     This_MOD.create_tech___compact()
 
+    --- Fijar las posiciones actual
+    GMOD.d00b.change_orders()
+
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 end
 
@@ -284,100 +287,6 @@ function This_MOD.get_elements()
 
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-    --- Item a afectar
-    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-    local function get_item(item)
-        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-        --- Validación
-        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-        if GMOD.get_key(item.flags, "not-stackable") then return end
-        if GMOD.get_key(item.flags, "spawnable") then return end
-        if This_MOD.ignore_types[item.type] then return end
-        if This_MOD.ignore_items[item.name] then return end
-
-        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-
-
-
-
-        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-        --- Valores a usar
-        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-        --- Contenedor de la info
-        local Space = {}
-
-        --- Guardar el objeto
-        Space.item = item
-
-        --- Calcular la cantidad
-        Space.amount = This_MOD.setting.amount
-        if This_MOD.setting.stack_size then
-            Space.amount = Space.amount * item.stack_size
-            if Space.amount > 65000 then
-                Space.amount = 65000
-            end
-        end
-
-        --- Separar el nombre
-        local That_MOD =
-            GMOD.get_id_and_name(item.name) or
-            { ids = "-", name = item.name }
-
-        --- Valores comunes
-        local Prefix =
-            GMOD.name .. That_MOD.ids ..
-            This_MOD.id .. "-"
-
-        local Amount = (
-                This_MOD.setting.stack_size and
-                item.stack_size .. "x" .. This_MOD.setting.amount or
-                Space.amount
-            ) .. "u-" ..
-            That_MOD.name
-
-        --- Nombre del objeto
-        Space.item_name =
-            Prefix ..
-            Amount
-
-        --- Nombre de la recetas
-        Space.do_name =
-            Prefix ..
-            This_MOD.category_do .. "-" ..
-            Amount
-
-        Space.undo_name =
-            Prefix ..
-            This_MOD.category_undo .. "-" ..
-            Amount
-
-        --- Nombre del nuevo subgrupo
-        That_MOD =
-            GMOD.get_id_and_name(Space.item.subgroup) or
-            { ids = "-", name = Space.item.subgroup }
-
-        Space.subgroup =
-            GMOD.name .. That_MOD.ids ..
-            This_MOD.id .. "-" ..
-            That_MOD.name
-
-        --- Guardar los valores
-        This_MOD.items[item.name] = Space
-
-        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-    end
-
-    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-
-
-
-
-    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
     --- Valores a afectar
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -391,8 +300,105 @@ function This_MOD.get_elements()
     --- Item a afectar
     This_MOD.items = {}
     for _, item in pairs(GMOD.items) do
-        get_item(item)
+        This_MOD.add_item(item)
     end
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+end
+
+function This_MOD.add_item(item)
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    --- Validación
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    if GMOD.get_key(item.flags, "not-stackable") then return end
+    if GMOD.get_key(item.flags, "spawnable") then return end
+    if This_MOD.ignore_types[item.type] then return end
+    if This_MOD.ignore_items[item.name] then return end
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    --- Valores a usar
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    --- Contenedor de la info
+    local Space = {}
+
+    --- Guardar el objeto
+    Space.item = item
+
+    --- Calcular la cantidad
+    Space.amount = This_MOD.setting.amount
+    if This_MOD.setting.stack_size then
+        Space.amount = Space.amount * item.stack_size
+        if Space.amount > 65000 then
+            Space.amount = 65000
+        end
+    end
+
+    --- Separar el nombre
+    local That_MOD =
+        GMOD.get_id_and_name(item.name) or
+        { ids = "-", name = item.name }
+
+    --- Valores comunes
+    local Prefix =
+        GMOD.name .. That_MOD.ids ..
+        This_MOD.id .. "-"
+
+    local Amount = (
+            This_MOD.setting.stack_size and
+            item.stack_size .. "x" .. This_MOD.setting.amount or
+            Space.amount
+        ) .. "u-" ..
+        That_MOD.name
+
+    --- Nombre del objeto
+    Space.item_name =
+        Prefix ..
+        Amount
+
+    --- Nombre de la recetas
+    Space.do_name =
+        Prefix ..
+        This_MOD.category_do .. "-" ..
+        Amount
+
+    Space.undo_name =
+        Prefix ..
+        This_MOD.category_undo .. "-" ..
+        Amount
+
+    --- Nombre del nuevo subgrupo
+    That_MOD =
+        GMOD.get_id_and_name(Space.item.subgroup) or
+        { ids = "-", name = Space.item.subgroup }
+
+    Prefix =
+        GMOD.name .. That_MOD.ids ..
+        This_MOD.id .. "-"
+
+    Space.item_subgroup =
+        Prefix ..
+        That_MOD.name
+
+    Space.do_subgroup =
+        Prefix ..
+        This_MOD.category_do .. "-" ..
+        That_MOD.name
+
+    Space.undo_subgroup =
+        Prefix ..
+        This_MOD.category_undo .. "-" ..
+        That_MOD.name
+
+    --- Guardar los valores
+    This_MOD.items[item.name] = Space
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 end
@@ -481,7 +487,7 @@ function This_MOD.create_item(space)
     --- Guardar para afectar
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    This_MOD.items[Item.name] = Item
+    This_MOD.add_item(Item)
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -988,7 +994,7 @@ function This_MOD.create_item___compact()
         )
 
         --- Nombre del nuevo subgrupo
-        Item.subgroup = space.subgroup
+        Item.subgroup = space.item_subgroup
 
         --- Agregar indicador del MOD
         table.insert(Item.icons, GMOD.copy(This_MOD.indicator))
@@ -1015,8 +1021,7 @@ function This_MOD.create_item___compact()
             local Order = GMOD.subgroups[space.item.subgroup].order
 
             --- Actualizar el order
-            Order = tonumber(Order) + 7 * (10 ^ (#Order - 1))
-            Subgroup.order = tostring(Order)
+            Subgroup.order = 7 .. Order:sub(2)
         end
 
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -1056,55 +1061,17 @@ function This_MOD.create_recipe___compact()
     --- Función de procesamiento
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    local function create_recipe(item, category)
-        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-        --- Calcular el valor a utilizar
-        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-        local Amount = This_MOD.setting.amount
-        if This_MOD.setting.stack_size then
-            Amount = Amount * item.stack_size
-            if Amount > 65000 then
-                Amount = 65000
-            end
-        end
-
-        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-
-
-
-
+    local function create_recipe(space, category)
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
         --- Validación
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-        local That_MOD =
-            GMOD.get_id_and_name(item.name) or
-            { ids = "-", name = item.name }
-
         local Name =
-            GMOD.name .. That_MOD.ids ..
-            This_MOD.id .. "-" ..
-            category .. "-" ..
-            (
-                This_MOD.setting.stack_size and
-                item.stack_size .. "x" .. This_MOD.setting.amount or
-                Amount
-            ) .. "u-" ..
-            That_MOD.name
+            category == This_MOD.category_do and
+            space.do_name or
+            space.undo_name
 
         if data.raw.recipe[Name] then return end
-
-        local Item_name =
-            GMOD.name .. That_MOD.ids ..
-            This_MOD.id .. "-" ..
-            (
-                This_MOD.setting.stack_size and
-                item.stack_size .. "x" .. This_MOD.setting.amount or
-                Amount
-            ) .. "u-" ..
-            That_MOD.name
 
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -1122,24 +1089,19 @@ function This_MOD.create_recipe___compact()
         ---- Tipo, nombre y apodo
         Recipe.type = "recipe"
         Recipe.name = Name
-        Recipe.localised_name = util.copy(item.localised_name)
+        Recipe.localised_name = util.copy(space.item.localised_name)
 
         --- iconos
-        Recipe.icons = util.copy(item.icons)
+        Recipe.icons = util.copy(space.item.icons)
 
         --- Categoria
         Recipe.category = This_MOD.prefix .. category
 
         --- Nuevo subgrupo
-        That_MOD =
-            GMOD.get_id_and_name(item.subgroup) or
-            { ids = "-", name = item.subgroup }
-
         Recipe.subgroup =
-            GMOD.name .. That_MOD.ids ..
-            This_MOD.id .. "-" ..
-            category .. "-" ..
-            That_MOD.name
+            category == This_MOD.category_do and
+            space.do_subgroup or
+            space.undo_subgroup
 
         --- Ocultar receta del menú del jugador
         Recipe.hide_from_player_crafting = category == This_MOD.category_do
@@ -1150,8 +1112,8 @@ function This_MOD.create_recipe___compact()
         --- Compresión
         if category == This_MOD.category_do then
             --- Ingredientes y resultado
-            Recipe.results = { { type = "item", name = Item_name, amount = 1 } }
-            Recipe.ingredients = { { type = "item", name = item.name, amount = Amount } }
+            Recipe.results = { { type = "item", name = space.item_name, amount = 1 } }
+            Recipe.ingredients = { { type = "item", name = space.item.name, amount = space.amount } }
 
             --- Indicador del MOD
             table.insert(Recipe.icons, This_MOD.arrow_d___icon)
@@ -1160,11 +1122,17 @@ function This_MOD.create_recipe___compact()
         --- Descompresión
         if category == This_MOD.category_undo then
             --- Ingredientes y resultado
-            Recipe.ingredients = { { type = "item", name = Item_name, amount = 1 } }
-            Recipe.results = { { type = "item", name = item.name, amount = Amount } }
+            Recipe.ingredients = { { type = "item", name = space.item_name, amount = 1 } }
+            Recipe.results = { { type = "item", name = space.item.name, amount = space.amount } }
 
             --- Indicador del MOD
             table.insert(Recipe.icons, This_MOD.arrow_u___icon)
+        end
+
+        --- Modificar indicador
+        if GMOD.has_id(Recipe.name, "d01b") then
+            Recipe.icons[#Recipe.icons] = GMOD.copy(Recipe.icons[#Recipe.icons])
+            Recipe.icons[#Recipe.icons].scale = 0.5
         end
 
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -1179,16 +1147,15 @@ function This_MOD.create_recipe___compact()
 
         --- Duplicar el subgrupo
         if not GMOD.subgroups[Recipe.subgroup] then
-            GMOD.duplicate_subgroup(item.subgroup, Recipe.subgroup)
+            GMOD.duplicate_subgroup(space.item.subgroup, Recipe.subgroup)
 
             --- Renombrar
             local Subgroup = GMOD.subgroups[Recipe.subgroup]
-            local Order = GMOD.subgroups[item.subgroup].order
+            local Order = GMOD.subgroups[space.item.subgroup].order
             local Index = category == This_MOD.category_undo and 6 or 8
 
             --- Actualizar el order
-            Order = tonumber(Order) + Index * (10 ^ (#Order - 1))
-            Subgroup.order = tostring(Order)
+            Subgroup.order = Index .. Order:sub(2)
         end
 
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -1216,101 +1183,31 @@ function This_MOD.create_recipe___compact()
     --- Recorrer los objetos seleccionados
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    for _, item in pairs(This_MOD.items) do
-        create_recipe(item, This_MOD.category_do)
-        create_recipe(item, This_MOD.category_undo)
+    for _, space in pairs(This_MOD.items) do
+        create_recipe(space, This_MOD.category_do)
+        create_recipe(space, This_MOD.category_undo)
     end
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 end
 
 function This_MOD.create_tech___compact()
-    if true then return end
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
     --- Función de procesamiento
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    local function create_tech(item, category)
-        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-        --- Calcular el valor a utilizar
-        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-        local Amount = This_MOD.setting.amount
-        if This_MOD.setting.stack_size then
-            Amount = Amount * item.stack_size
-            if Amount > 65000 then
-                Amount = 65000
-            end
-        end
-
-        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-
-
-
-
+    local function create_tech(space)
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
         --- Validación
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-        local That_MOD =
-            GMOD.get_id_and_name(item.name) or
-            { ids = "-", name = item.name }
-
-        local Name =
-            GMOD.name .. That_MOD.ids ..
-            This_MOD.id .. "-" ..
-            category .. "-" ..
-            (
-                This_MOD.setting.stack_size and
-                item.stack_size .. "x" .. This_MOD.setting.amount or
-                Amount
-            ) .. "u-" ..
-            That_MOD.name
-
-        if not data.raw.recipe[Name] then return end
-
-        --- El objeto comprimido
-        local Item = {
-            name =
-                GMOD.name .. That_MOD.ids ..
-                This_MOD.id .. "-" ..
-                (
-                    This_MOD.setting.stack_size and
-                    item.stack_size .. "x" .. This_MOD.setting.amount or
-                    Amount
-                ) .. "u-" ..
-                That_MOD.name
-        }
-
-        Item = GMOD.items[Item.name]
+        if not GMOD.items[space.item_name] then return end
 
         --- Tech previa
-        local Prerequisites = GMOD.get_technology(GMOD.recipes[item.name], true)
+        local Prerequisites = GMOD.get_technology(GMOD.recipes[space.item.name], true)
         if not Prerequisites then
-            data.raw.recipe[Name].enabled = true
-            return
-        end
-
-        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-
-
-
-
-        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-        --- Cargar la tech
-        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-        --- Cargar la tech
-        local Tech = data.raw.technology[Item.name .. "-tech"] or {}
-
-        --- Agregar la receta
-        if Tech.name then
-            table.insert(Tech.effects, {
-                type = "unlock-recipe",
-                recipe = Name
-            })
+            data.raw.recipe[space.do_name].enabled = true
+            data.raw.recipe[space.undo_name].enabled = true
             return
         end
 
@@ -1324,19 +1221,22 @@ function This_MOD.create_tech___compact()
         --- Crear la tech
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
+        local Tech = {}
+
         --- Tipo y nombre
         Tech.type = "technology"
-        Tech.name = Item.name .. "-tech"
+        Tech.name = space.item_name .. "-tech"
 
         --- Apodo y descripción
-        Tech.localised_name = Item.localised_name
+        Tech.localised_name = space.item.localised_name
         Tech.localised_description = { "" }
 
         --- Cambiar icono
-        Tech.icons = Item.icons
+        Tech.icons = space.item.icons
+        Tech.icons = GMOD.items[space.item_name].icons
+        Tech.icons = GMOD.copy(Tech.icons)
         for _, icon in pairs(Tech.icons) do
             icon.icon_size = icon.icon_size or 64
-            -- icon.scale = (icon.scale or 1) * 0.5
             icon.scale = icon.scale or 0.5
         end
 
@@ -1344,16 +1244,16 @@ function This_MOD.create_tech___compact()
         Tech.prerequisites = { Prerequisites.name }
 
         --- Efecto de la tech
-        Tech.effects = { {
-            type = "unlock-recipe",
-            recipe = Name
-        } }
+        Tech.effects = {
+            { type = "unlock-recipe", recipe = space.do_name },
+            { type = "unlock-recipe", recipe = space.undo_name }
+        }
 
         --- Tech se activa con una fabricación
         Tech.research_trigger = {
             type = "craft-item",
-            item = item.name,
-            count = Amount
+            item = space.item.name,
+            count = space.amount
         }
 
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -1381,9 +1281,8 @@ function This_MOD.create_tech___compact()
     --- Recorrer los objetos seleccionados
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    for _, item in pairs(This_MOD.items) do
-        create_tech(item, This_MOD.category_do)
-        create_tech(item, This_MOD.category_undo)
+    for _, space in pairs(This_MOD.items) do
+        create_tech(space)
     end
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
