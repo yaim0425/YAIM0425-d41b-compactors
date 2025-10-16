@@ -311,7 +311,7 @@ function This_MOD.get_elements()
             if element.minable then
                 for _, result in pairs(element.minable.results or {}) do
                     if result.type == "item" then
-                        Output[result.name] = true
+                        Output[result.name] = element
                     end
                 end
             end
@@ -1262,13 +1262,19 @@ function This_MOD.create_tech___compact()
         --- El objeto no ha sido credo
         if not GMOD.items[space.item_name] then return end
 
+        --- Buscar el mineral
+        local Resource = This_MOD.resource[space.item.name]
+
         --- Tech previa
         local Prerequisites = GMOD.get_technology(GMOD.recipes[space.item.name], true)
-        if not Prerequisites or This_MOD.resource[space.item.name] then
+        if not Prerequisites and not Resource then
             data.raw.recipe[space.do_name].enabled = true
             data.raw.recipe[space.undo_name].enabled = true
             return
         end
+
+        --- No se requiere prerequitos para minerales
+        Prerequisites = not Resource and Prerequisites or {}
 
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -1306,12 +1312,19 @@ function This_MOD.create_tech___compact()
             { type = "unlock-recipe", recipe = space.undo_name }
         }
 
-        --- Tech se activa con una fabricación
-        Tech.research_trigger = {
-            type = "craft-item",
-            item = space.item.name,
-            count = space.amount
-        }
+        --- Tech se activa con una acción
+        Tech.research_trigger = {}
+
+        if Resource then
+            Tech.research_trigger.type = "mine-entity"
+            Tech.research_trigger.entity = Resource.name
+        end
+
+        if not Resource then
+            Tech.research_trigger.type = "craft-item"
+            Tech.research_trigger.item = space.item.name
+            Tech.research_trigger.count = space.amount
+        end
 
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
