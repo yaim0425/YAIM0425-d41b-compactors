@@ -287,6 +287,58 @@ function This_MOD.get_elements()
 
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    --- Mierales a afectar
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    local function get_resource()
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Variable a usar
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        local Output = {}
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Objectos minables
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        for _, element in pairs(data.raw.resource) do
+            if element.minable then
+                for _, result in pairs(element.minable.results or {}) do
+                    if result.type == "item" then
+                        Output[result.name] = true
+                    end
+                end
+            end
+        end
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Devolver el resultado
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        return Output
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    end
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
     --- Valores a afectar
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -302,6 +354,9 @@ function This_MOD.get_elements()
     for _, item in pairs(GMOD.items) do
         This_MOD.add_item(item)
     end
+
+    --- Mierales a afectar
+    This_MOD.resource = get_resource()
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 end
@@ -775,14 +830,17 @@ function This_MOD.create_recipe(space)
     --- Elimnar propiedades inecesarias
     Recipe.main_product = nil
 
+    --- Habilitar la receta
+    Recipe.enabled = space.tech == nil
+
+    --- Actualizar subgrupo
+    Recipe.subgroup = This_MOD.new_subgroup
+
     --- Cambiar icono
     Recipe.icons = {
         { icon = This_MOD.icon_graphics.base },
         { icon = This_MOD.icon_graphics.mask, tint = space.color },
     }
-
-    --- Habilitar la receta
-    Recipe.enabled = space.tech == nil
 
     --- Ingredientes
     for _, ingredient in pairs(Recipe.ingredients) do
@@ -1201,11 +1259,12 @@ function This_MOD.create_tech___compact()
         --- Validación
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
+        --- El objeto no ha sido credo
         if not GMOD.items[space.item_name] then return end
 
         --- Tech previa
         local Prerequisites = GMOD.get_technology(GMOD.recipes[space.item.name], true)
-        if not Prerequisites then
+        if not Prerequisites or This_MOD.resource[space.item.name] then
             data.raw.recipe[space.do_name].enabled = true
             data.raw.recipe[space.undo_name].enabled = true
             return
