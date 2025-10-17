@@ -1197,7 +1197,7 @@ function This_MOD.create_recipe___compact()
             --- Renombrar
             local Subgroup = GMOD.subgroups[Recipe.subgroup]
             local Order = GMOD.subgroups[space.item.subgroup].order
-            local Index = category == This_MOD.category_undo and 1 or 2
+            local Index = category == This_MOD.category_undo and 1 or 3
 
             --- Actualizar el order
             Subgroup.order = Index .. Order:sub(2)
