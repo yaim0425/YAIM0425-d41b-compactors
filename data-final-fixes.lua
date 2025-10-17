@@ -1284,15 +1284,15 @@ function This_MOD.create_tech___compact()
         Do_tech.localised_name = space.item.localised_name
         Do_tech.localised_description = space.item.localised_description
 
+        --- Tech previas
+        Do_tech.prerequisites = { Prerequisites.name }
+
         --- Cambiar icono
         Do_tech.icons = GMOD.copy(data.raw.recipe[space.do_name].icons)
         for _, icon in pairs(Do_tech.icons) do
             icon.icon_size = icon.icon_size or 64
             icon.scale = icon.scale or 0.5
         end
-
-        --- Tech previas
-        Do_tech.prerequisites = { Prerequisites.name }
 
         --- Efecto de la tech
         Do_tech.effects = { {
@@ -1335,15 +1335,15 @@ function This_MOD.create_tech___compact()
         Undo_tech.localised_name = space.item.localised_name
         Undo_tech.localised_description = space.item.localised_description
 
+        --- Tech previas
+        Undo_tech.prerequisites = { Do_tech.name }
+
         --- Cambiar icono
         Undo_tech.icons = GMOD.copy(data.raw.recipe[space.undo_name].icons)
         for _, icon in pairs(Undo_tech.icons) do
             icon.icon_size = icon.icon_size or 64
             icon.scale = icon.scale or 0.5
         end
-
-        --- Tech previas
-        Undo_tech.prerequisites = { Do_tech.name }
 
         --- Efecto de la tech
         Undo_tech.effects = { {
