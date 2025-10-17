@@ -31,7 +31,6 @@ function This_MOD.start()
             --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
             -- --- Crear los elementos
-            This_MOD.create_subgroup(space)
             This_MOD.create_item(space)
             This_MOD.create_entity(space)
             This_MOD.create_recipe(space)
@@ -460,30 +459,6 @@ end
 
 ---------------------------------------------------------------------------
 
-function This_MOD.create_subgroup(space)
-    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-    --- Validación
-    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-    if not space.item then return end
-
-    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-
-
-
-
-    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-    --- Crear un nuevo subgrupo
-    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-    local Old = This_MOD.old_subgroup
-    local New = This_MOD.new_subgroup
-    GMOD.duplicate_subgroup(Old, New)
-
-    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-end
-
 function This_MOD.create_item(space)
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
     --- Validación
@@ -523,14 +498,26 @@ function This_MOD.create_item(space)
     --- Entidad a crear
     Item.place_result = space.name
 
+    --- Actualizar subgrupo
+    Item.subgroup = This_MOD.new_subgroup
+
     --- Agregar indicador del MOD
     Item.icons = {
         { icon = This_MOD.icon_graphics.base },
         { icon = This_MOD.icon_graphics.mask, tint = space.color },
     }
 
-    --- Actualizar subgrupo
-    Item.subgroup = This_MOD.new_subgroup
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    --- Crear el subgrupo para el objeto
+    --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    GMOD.duplicate_subgroup(This_MOD.old_subgroup, Item.subgroup)
 
     --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -834,7 +821,7 @@ function This_MOD.create_recipe(space)
     Recipe.enabled = space.tech == nil
 
     --- Actualizar subgrupo
-    Recipe.subgroup = This_MOD.new_subgroup
+    Recipe.subgroup = GMOD.items[space.name].subgroup
 
     --- Cambiar icono
     Recipe.icons = {
