@@ -1270,48 +1270,93 @@ function This_MOD.create_tech___compact()
 
 
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-        --- Crear la tech
+        --- Crear la tech para la compresión
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-        local Tech = {}
+        --- Contenedor de la tech
+        local Do_tech = {}
 
         --- Tipo y nombre
-        Tech.type = "technology"
-        Tech.name = space.item_name .. "-tech"
+        Do_tech.type = "technology"
+        Do_tech.name = space.do_name .. "-tech"
 
         --- Apodo y descripción
-        Tech.localised_name = space.item.localised_name
-        Tech.localised_description = { "" }
+        Do_tech.localised_name = space.item.localised_name
+        Do_tech.localised_description = space.item.localised_description
 
         --- Cambiar icono
-        Tech.icons = GMOD.copy(GMOD.items[space.item_name].icons)
-        for _, icon in pairs(Tech.icons) do
+        Do_tech.icons = GMOD.copy(data.raw.recipe[space.do_name].icons)
+        for _, icon in pairs(Do_tech.icons) do
             icon.icon_size = icon.icon_size or 64
             icon.scale = icon.scale or 0.5
         end
 
         --- Tech previas
-        Tech.prerequisites = { Prerequisites.name }
+        Do_tech.prerequisites = { Prerequisites.name }
 
         --- Efecto de la tech
-        Tech.effects = {
-            { type = "unlock-recipe", recipe = space.do_name },
-            { type = "unlock-recipe", recipe = space.undo_name }
-        }
+        Do_tech.effects = { {
+            type = "unlock-recipe",
+            recipe = space.do_name
+        } }
 
         --- Tech se activa con una acción
-        Tech.research_trigger = {}
+        Do_tech.research_trigger = {}
 
         if Resource then
-            Tech.research_trigger.type = "mine-entity"
-            Tech.research_trigger.entity = Resource.name
+            Do_tech.research_trigger.type = "mine-entity"
+            Do_tech.research_trigger.entity = Resource.name
         end
 
         if not Resource then
-            Tech.research_trigger.type = "craft-item"
-            Tech.research_trigger.item = space.item.name
-            Tech.research_trigger.count = space.amount
+            Do_tech.research_trigger.type = "craft-item"
+            Do_tech.research_trigger.item = space.item.name
+            Do_tech.research_trigger.count = space.amount
         end
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+
+
+
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        --- Crear la tech para la descompresión
+        --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+        --- Contenedor de la tech
+        local Undo_tech = {}
+
+        --- Tipo y nombre
+        Undo_tech.type = "technology"
+        Undo_tech.name = space.undo_name .. "-tech"
+
+        --- Apodo y descripción
+        Undo_tech.localised_name = space.item.localised_name
+        Undo_tech.localised_description = space.item.localised_description
+
+        --- Cambiar icono
+        Undo_tech.icons = GMOD.copy(data.raw.recipe[space.undo_name].icons)
+        for _, icon in pairs(Undo_tech.icons) do
+            icon.icon_size = icon.icon_size or 64
+            icon.scale = icon.scale or 0.5
+        end
+
+        --- Tech previas
+        Undo_tech.prerequisites = { Do_tech.name }
+
+        --- Efecto de la tech
+        Undo_tech.effects = { {
+            type = "unlock-recipe",
+            recipe = space.undo_name
+        } }
+
+        --- Tech se activa con una acción
+        Undo_tech.research_trigger = {
+            type = "craft-item",
+            item = space.item_name,
+            count = 1
+        }
 
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -1323,7 +1368,7 @@ function This_MOD.create_tech___compact()
         --- Crear el prototipo
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-        GMOD.extend(Tech)
+        GMOD.extend(Do_tech, Undo_tech)
 
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
     end
