@@ -1066,7 +1066,7 @@ function This_MOD.create_item___compact()
             local Order = GMOD.subgroups[space.item.subgroup].order
 
             --- Actualizar el order
-            Subgroup.order = 5 .. Order:sub(2)
+            Subgroup.order = 8 .. Order:sub(2)
         end
 
         --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -1197,7 +1197,7 @@ function This_MOD.create_recipe___compact()
             --- Renombrar
             local Subgroup = GMOD.subgroups[Recipe.subgroup]
             local Order = GMOD.subgroups[space.item.subgroup].order
-            local Index = category == This_MOD.category_undo and 4 or 6
+            local Index = category == This_MOD.category_undo and 7 or 9
 
             --- Actualizar el order
             Subgroup.order = Index .. Order:sub(2)
